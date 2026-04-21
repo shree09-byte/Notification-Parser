@@ -1,0 +1,50 @@
+{
+  "name": "applet",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "dev": "ng serve --port 3000 --host 0.0.0.0 --disable-host-check --live-reload false",
+    "start": "ng serve --port 3000 --host 0.0.0.0 --disable-host-check",
+    "build": "ng build && mv dist/applet/browser/* dist/applet/ && mv dist/applet/* dist/ 2>/dev/null || true",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^19.2.0",
+    "@angular/compiler": "^19.2.0",
+    "@angular/core": "^19.2.0",
+    "@angular/forms": "^19.2.0",
+    "@angular/platform-browser": "^19.2.0",
+    "@angular/platform-browser-dynamic": "^19.2.0",
+    "@angular/router": "^19.2.0",
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@google/genai": "^1.50.1",
+    "@tailwindcss/postcss": "^4.2.3",
+    "firebase": "^12.12.1",
+    "lucide-angular": "^1.0.0",
+    "marked": "^18.0.2",
+    "rxjs": "~7.8.0",
+    "tailwindcss": "^4.2.3",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.2.24",
+    "@angular/cli": "^19.2.24",
+    "@angular/compiler-cli": "^19.2.0",
+    "@capacitor/cli": "^8.3.1",
+    "@firebase/eslint-plugin-security-rules": "^0.0.1",
+    "@types/jasmine": "~5.1.0",
+    "eslint": "^10.2.1",
+    "jasmine-core": "~5.6.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.59.0"
+  }
+}

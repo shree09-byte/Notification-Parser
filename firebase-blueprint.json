@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "notification": {
+      "title": "Notification Detail",
+      "description": "Stores a parsed notification summary and its raw data, to be viewed on the dashboard.",
+      "type": "object",
+      "properties": {
+        "appName": { "type": "string" },
+        "titleText": { "type": "string" },
+        "body": { "type": "string" },
+        "persona": { "type": "string" },
+        "summary": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["CRITICAL", "HIGH", "NORMAL", "LOW"] },
+        "actionItems": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suggestedReply": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["appName", "titleText", "body", "persona", "summary", "category", "priority", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/notifications/{notificationId}": {
+      "schema": "notification",
+      "description": "User's parsed notifications for the dashboard"
+    }
+  }
+}

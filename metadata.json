@@ -1,0 +1,6 @@
+{
+  "name": "Mobile Notification Parser",
+  "description": "Transform raw notification data into a glanceable summary using AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

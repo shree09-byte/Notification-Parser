@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pulse Intelligence</string>
+    <string name="title_activity_main">Pulse Intelligence</string>
+    <string name="package_name">com.pulse.intelligence</string>
+    <string name="custom_url_scheme">com.pulse.intelligence</string>
+</resources>
