@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); // Enforced by system instructions
+const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 const auth = getAuth(app);
 
 export interface NotificationRecord {
@@ -39,6 +39,9 @@ export class FirebaseService {
   constructor() {
     this.testConnection();
 
+    // Check for redirect result on initialization
+    getRedirectResult(auth).catch(err => console.error("Redirect error:", err));
+
     onAuthStateChanged(auth, (user) => {
       this.userSub.next(user);
       if (user) {
@@ -65,8 +68,10 @@ export class FirebaseService {
 
   async login() {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      await signInWithPopup(auth, provider);
+      // Using redirect instead of popup to fix "Invalid Action" in iframes and mobile
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Login failed:", error);
     }

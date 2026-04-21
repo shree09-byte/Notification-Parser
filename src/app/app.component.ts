@@ -2,14 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { LucideAngularModule, BellRing, Smartphone, Sparkles, AlertCircle, CheckCircle, RefreshCcw, Zap, MessageSquare, ListTodo, ChevronRight, Copy, LogOut, DownloadCloud } from 'lucide-angular';
+import { LucideAngularModule, BellRing, Smartphone, Sparkles, AlertCircle, CheckCircle, RefreshCcw, Zap, MessageSquare, ListTodo, ChevronRight, Copy, LogOut, DownloadCloud, Settings } from 'lucide-angular';
 import { GoogleGenAI, Type } from '@google/genai';
 import { marked } from 'marked';
 import { FirebaseService, NotificationRecord } from './firebase.service';
 import { User } from 'firebase/auth';
+import { registerPlugin, Capacitor } from '@capacitor/core';
 
 declare const process: any;
 declare const GEMINI_API_KEY: string;
+
+interface NotificationSettingsPlugin {
+  openSettings(): Promise<void>;
+}
+const NotificationSettings = registerPlugin<NotificationSettingsPlugin>('NotificationSettings');
 
 export interface ParserResult {
   summary: string;
@@ -41,14 +47,33 @@ export class AppComponent implements OnInit {
   history: NotificationRecord[] = [];
   showingHistory = false;
 
+  isNative = Capacitor.isNativePlatform();
+
   constructor(private sanitizer: DomSanitizer, public firebase: FirebaseService) {}
 
   ngOnInit() {
-    this.firebase.user$.subscribe(u => this.user = u);
+    this.firebase.user$.subscribe(u => {
+      this.user = u;
+      if (u && this.isNative) {
+        // Sync userId to native storage for the background listener
+        localStorage.setItem('CapacitorStorage.userId', u.uid);
+      }
+    });
+
     this.firebase.notifications$.subscribe(n => {
       this.history = n;
-      console.log('History updated:', n.length);
     });
+  }
+
+  async setupMobileListener() {
+    if (this.isNative) {
+      try {
+        await NotificationSettings.openSettings();
+      } catch (err) {
+        console.error('Failed to open notification settings', err);
+        alert('Could not open settings. Please go to Settings > App & Notifications > Special App Access > Notification Access and enable Pulse Intelligence.');
+      }
+    }
   }
 
   get parsedSummary(): SafeHtml {

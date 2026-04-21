@@ -8,6 +8,10 @@
       </button>
     </ng-container>
     <ng-container *ngIf="user">
+      <button *ngIf="isNative" (click)="setupMobileListener()" class="px-4 py-2 border border-blue-500/30 hover:border-blue-400 text-xs font-bold uppercase tracking-widest text-blue-400 rounded transition-colors flex items-center gap-2 bg-blue-900/10">
+        <lucide-icon name="smartphone" [size]="14"></lucide-icon>
+        Enable Listener
+      </button>
       <button (click)="showingHistory = !showingHistory" class="px-4 py-2 border border-[#333] hover:border-white text-xs font-bold uppercase tracking-widest text-white rounded transition-colors flex items-center gap-2 bg-[#1a1a1c]">
         {{ showingHistory ? 'Back to Triage' : 'View Hub (' + history.length + ')' }}
       </button>

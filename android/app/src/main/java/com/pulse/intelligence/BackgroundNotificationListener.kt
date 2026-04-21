@@ -1,13 +1,11 @@
 package com.pulse.intelligence
 
+import android.content.Context
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-
-// NOTE: To make this fully functional, an Android developer will need to:
-// 1. Uncomment and configure Google Firebase SDK in Android module (build.gradle)
-// 2. Add 'google-services.json' directly into the android/app directory.
-// 3. Connect this to the exact same Firebase DB.
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
 
 class BackgroundNotificationListener : NotificationListenerService() {
 
@@ -18,40 +16,46 @@ class BackgroundNotificationListener : NotificationListenerService() {
         if (packageName == "android" || packageName == "com.pulse.intelligence") return
 
         val extras = sbn.notification.extras
-        
         val title = extras.getString("android.title") ?: ""
         val text = extras.getCharSequence("android.text")?.toString() ?: ""
 
         if (title.isNotEmpty() && text.isNotEmpty()) {
-            
-            Log.d("PulseIntelligence", "Intercepted Notification from $packageName: $title")
+            Log.d("PulseIntelligence", "Intercepted from $packageName: $title")
 
-            // The Schema payload structure corresponding with Angular Firebase Database
-            /*
+            // Get userId from SharedPreferences (stored by the Web App)
+            val sharedPrefs = getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE)
+            val userId = sharedPrefs.getString("userId", null)
+
+            if (userId == null) {
+                Log.e("PulseIntelligence", "No userId found in storage. Cannot sync to cloud.")
+                return
+            }
+
             val notificationData = hashMapOf(
-                "appName" to packageName,
+                "appName" to (getPackageManager()?.getApplicationLabel(getPackageManager().getApplicationInfo(packageName, 0)) ?: packageName),
                 "titleText" to title,
                 "body" to text,
-                "persona" to "Background Extraction",
-                "summary" to "Pending AI Triage. Return to the Pulse Intelligence App to process this notification.", 
+                "persona" to "Native Listener",
+                "summary" to "Imported from Android notifications.", 
                 "category" to "Imported",
                 "priority" to "LOW",
-                "userId" to "REPLACE_WITH_YOUR_FIREBASE_UID", // Set via LocalStorage or Preferences
-                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                "userId" to userId,
+                "createdAt" to FieldValue.serverTimestamp()
             )
 
-            // Push to Firebase directly
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document("REPLACE_WITH_YOUR_FIREBASE_UID")
-                .collection("notifications")
-                .add(notificationData)
-                .addOnSuccessListener { Log.d("PulseIntelligence", "Saved!") }
-             */
+            try {
+                FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(userId)
+                    .collection("notifications")
+                    .add(notificationData)
+                    .addOnSuccessListener { Log.d("PulseIntelligence", "Notification synced to Cloud Firestore") }
+                    .addOnFailureListener { e -> Log.e("PulseIntelligence", "Firebase Sync Failed", e) }
+            } catch (e: Exception) {
+                Log.e("PulseIntelligence", "Firebase possibly not initialized: ${e.message}")
+            }
         }
     }
 
-    override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        // Handle notification dismissals if needed
-    }
+    override fun onNotificationRemoved(sbn: StatusBarNotification) {}
 }
