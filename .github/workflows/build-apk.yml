@@ -36,9 +36,13 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Build APK
         run: |
           cd android
+          rm -f gradle/wrapper/gradle-wrapper.jar
           gradle wrapper
           chmod +x gradlew
           ./gradlew assembleDebug
