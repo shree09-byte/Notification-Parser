@@ -36,16 +36,15 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build APK
+      - name: Build APK (System Gradle)
         run: |
           cd android
-          rm -f gradle/wrapper/gradle-wrapper.jar
-          gradle wrapper
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          # Delete the corrupted capacitor wrapper before it can break anything
+          rm -rf gradle/wrapper/
+          rm -f gradlew gradlew.bat
+          
+          # Use Ubuntu's natively installed Gradle engine instead of a wrapper
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
