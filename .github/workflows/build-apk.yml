@@ -20,7 +20,12 @@ jobs:
         run: npm install
 
       - name: Build Web App
-        run: npm run build
+        run: |
+          npm run build
+          # Capacitor failsafe: ensure dist, dist/applet, and dist/applet/browser all contain the index.html so it never fails
+          mkdir -p dist/applet/browser
+          cp -r dist/* dist/applet/browser/ 2>/dev/null || true
+          cp -r dist/* dist/applet/ 2>/dev/null || true
 
       - name: Sync Capacitor
         run: npx cap sync android
