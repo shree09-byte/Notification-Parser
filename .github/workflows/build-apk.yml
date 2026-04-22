@@ -30,6 +30,12 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Hotfix Outdated Plugins (Remove jcenter)
+        run: |
+          # The Google Auth plugin uses the deprecated jcenter() which crashes modern Gradle.
+          # We search and replace all instances of jcenter() with mavenCentral() in node_modules.
+          grep -rl "jcenter()" node_modules/ | xargs sed -i 's/jcenter()/mavenCentral()/g' || true
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
