@@ -89,6 +89,14 @@ export class AppComponent implements OnInit {
     this.firebase.login();
   }
 
+  get loginError(): string | null {
+    return this.firebase.error;
+  }
+
+  get isLoginLoading(): boolean {
+    return this.firebase.isLoading;
+  }
+
   logout() {
     this.firebase.logout();
   }

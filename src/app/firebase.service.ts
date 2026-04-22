@@ -38,6 +38,9 @@ export class FirebaseService {
 
   private unsubscribeSnapshot: any;
 
+  isLoading = false;
+  error: string | null = null;
+
   constructor() {
     this.testConnection();
 
@@ -76,26 +79,30 @@ export class FirebaseService {
   }
 
   async login() {
+    this.isLoading = true;
+    this.error = null;
     if (Capacitor.isNativePlatform()) {
       // NATIVE APK LOGIN
       try {
         const googleUser = await GoogleAuth.signIn();
         const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
         await signInWithCredential(auth, credential);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Native Google Login failed:", error);
+        this.error = "Mobile Login Error: " + (error.message || "Credential exchange failed. Please check SHA-1 in Firebase.");
       }
     } else {
       // WEB BROWSER LOGIN
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       try {
-        // Using redirect instead of popup to fix "Invalid Action" in iframes and mobile
         await signInWithRedirect(auth, provider);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Login failed:", error);
+        this.error = "Web Login Error: " + error.message;
       }
     }
+    this.isLoading = false;
   }
 
   async logout() {

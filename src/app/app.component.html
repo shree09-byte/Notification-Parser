@@ -1,10 +1,11 @@
 <div class="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] font-sans p-4 sm:p-8 flex flex-col items-center overflow-x-hidden relative">
   
   <!-- Auth Header -->
-  <div class="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-4 z-10">
+  <div class="absolute top-4 right-4 sm:top-8 sm:right-8 flex flex-col items-end gap-2 z-10">
+    <div class="flex items-center gap-4">
     <ng-container *ngIf="!user">
-      <button (click)="login()" class="px-4 py-2 border border-[#333] hover:border-[#666] text-xs font-bold uppercase tracking-widest text-[#aaa] hover:text-white rounded transition-colors flex items-center gap-2 bg-[#111]">
-        Sign In to Sync
+      <button (click)="login()" [disabled]="isLoginLoading" class="px-4 py-2 border border-[#333] hover:border-[#666] text-xs font-bold uppercase tracking-widest text-[#aaa] hover:text-white rounded transition-colors flex items-center gap-2 bg-[#111] disabled:opacity-50">
+        {{ isLoginLoading ? 'Connecting...' : 'Sign In to Sync' }}
       </button>
     </ng-container>
     <ng-container *ngIf="user">
@@ -20,6 +21,11 @@
         <lucide-icon name="log-out" [size]="14"></lucide-icon>
       </button>
     </ng-container>
+    </div>
+    <!-- Login Error Display -->
+    <div *ngIf="loginError" class="text-[9px] text-red-500 uppercase tracking-widest bg-red-900/10 px-2 py-1 rounded border border-red-500/20 animate-pulse">
+      {{ loginError }}
+    </div>
   </div>
 
   <div class="w-full max-w-5xl mx-auto flex flex-col flex-1 pb-8 mt-16 sm:mt-8">
