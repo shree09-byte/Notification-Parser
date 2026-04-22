@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User, signInWithCredential } from 'firebase/auth';
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -39,8 +41,10 @@ export class FirebaseService {
   constructor() {
     this.testConnection();
 
-    // Check for redirect result on initialization
-    getRedirectResult(auth).catch(err => console.error("Redirect error:", err));
+    // Check for redirect result on initialization (web only)
+    if (!Capacitor.isNativePlatform()) {
+      getRedirectResult(auth).catch(err => console.error("Redirect error:", err));
+    }
 
     onAuthStateChanged(auth, (user) => {
       this.userSub.next(user);
@@ -54,6 +58,11 @@ export class FirebaseService {
         this.notificationsSub.next([]);
       }
     });
+
+    // Initialize native Google Auth if on mobile
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize();
+    }
   }
 
   async testConnection() {
@@ -67,13 +76,25 @@ export class FirebaseService {
   }
 
   async login() {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    try {
-      // Using redirect instead of popup to fix "Invalid Action" in iframes and mobile
-      await signInWithRedirect(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error);
+    if (Capacitor.isNativePlatform()) {
+      // NATIVE APK LOGIN
+      try {
+        const googleUser = await GoogleAuth.signIn();
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+        await signInWithCredential(auth, credential);
+      } catch (error) {
+        console.error("Native Google Login failed:", error);
+      }
+    } else {
+      // WEB BROWSER LOGIN
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try {
+        // Using redirect instead of popup to fix "Invalid Action" in iframes and mobile
+        await signInWithRedirect(auth, provider);
+      } catch (error) {
+        console.error("Login failed:", error);
+      }
     }
   }
 
