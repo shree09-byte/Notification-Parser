@@ -89,7 +89,14 @@ export class FirebaseService {
         await signInWithCredential(auth, credential);
       } catch (error: any) {
         console.error("Native Google Login failed:", error);
-        this.error = "Mobile Login Error: " + (error.message || "Credential exchange failed. Please check SHA-1 in Firebase.");
+        // Show as much info as possible in the UI for debugging
+        const rawError = JSON.stringify(error);
+        if (rawError === "{}" && error.toString()) {
+           this.error = "Auth Error: " + error.toString();
+        } else {
+           this.error = "Auth Error: " + (error.message || rawError || "Unknown failure");
+        }
+        this.error += ". Tip: Ensure your SHA-1 is added to Firebase.";
       }
     } else {
       // WEB BROWSER LOGIN

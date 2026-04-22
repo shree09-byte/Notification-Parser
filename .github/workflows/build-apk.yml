@@ -49,8 +49,17 @@ jobs:
           rm -rf gradle/wrapper/
           rm -f gradlew gradlew.bat
           
+          # Generate signing report so the user can find their SHA-1 for Firebase
+          gradle signingReport > signing-report.txt
+          
           # Use Ubuntu's natively installed Gradle engine instead of a wrapper
           gradle assembleDebug
+
+      - name: Upload Signing Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: PulseIntelligence-SigningReport
+          path: android/signing-report.txt
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
