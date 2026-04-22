@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User, signInWithCredential } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -44,10 +43,13 @@ export class FirebaseService {
   constructor() {
     this.testConnection();
 
-    // Check for redirect result on initialization (web only)
-    if (!Capacitor.isNativePlatform()) {
-      getRedirectResult(auth).catch(err => console.error("Redirect error:", err));
-    }
+    // Handle the redirect result when the app starts
+    getRedirectResult(auth).catch(err => {
+      console.error("Redirect login result error:", err);
+      if (err.message?.includes('auth/operation-not-supported-in-this-environment')) {
+        // Fallback or ignore if not supported
+      }
+    });
 
     onAuthStateChanged(auth, (user) => {
       this.userSub.next(user);
@@ -61,11 +63,6 @@ export class FirebaseService {
         this.notificationsSub.next([]);
       }
     });
-
-    // Initialize native Google Auth if on mobile
-    if (Capacitor.isNativePlatform()) {
-      GoogleAuth.initialize();
-    }
   }
 
   async testConnection() {
@@ -81,35 +78,23 @@ export class FirebaseService {
   async login() {
     this.isLoading = true;
     this.error = null;
-    if (Capacitor.isNativePlatform()) {
-      // NATIVE APK LOGIN
-      try {
-        const googleUser = await GoogleAuth.signIn();
-        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
-        await signInWithCredential(auth, credential);
-      } catch (error: any) {
-        console.error("Native Google Login failed:", error);
-        // Show as much info as possible in the UI for debugging
-        const rawError = JSON.stringify(error);
-        if (rawError === "{}" && error.toString()) {
-           this.error = "Auth Error: " + error.toString();
-        } else {
-           this.error = "Auth Error: " + (error.message || rawError || "Unknown failure");
-        }
-        this.error += ". Tip: Ensure your SHA-1 is added to Firebase.";
-      }
-    } else {
-      // WEB BROWSER LOGIN
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // "Normal" way for mobile: Redirect to Google login in browser
         await signInWithRedirect(auth, provider);
-      } catch (error: any) {
-        console.error("Login failed:", error);
-        this.error = "Web Login Error: " + error.message;
+      } else {
+        // Standard way for web: Popup login
+        await signInWithPopup(auth, provider);
       }
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      this.error = "Login Error: " + error.message;
+    } finally {
+      this.isLoading = false;
     }
-    this.isLoading = false;
   }
 
   async logout() {
